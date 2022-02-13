@@ -1,4 +1,4 @@
-# `clippy-action-fmt`
+# `cargo-action-fmt`
 
 Takes JSON-formatted `cargo check` (and `cargo clippy`) output and formats it for GitHub actions.
 
