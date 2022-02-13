@@ -1,0 +1,85 @@
+#![deny(warnings, rust_2018_idioms)]
+
+use anyhow::Result;
+use clap::Parser;
+use serde_json as json;
+use std::path::PathBuf;
+
+/// Converts cargo check (and clippy) JSON output to the GitHub Action error format
+#[derive(Debug, Parser)]
+struct Args {
+    path: Option<PathBuf>,
+}
+
+#[derive(Clone, Debug, serde::Deserialize)]
+#[serde(tag = "reason", rename_all = "kebab-case")]
+enum ClippyObj {
+    CompilerArtifact(json::Value),
+    BuildScriptExecuted(json::Value),
+    CompilerMessage { message: CompilerMessage },
+    BuildFinished { success: bool },
+}
+
+#[derive(Clone, Debug, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+struct CompilerMessage {
+    rendered: String,
+    code: Option<json::Value>,
+    level: String,
+    spans: Vec<CompilerMessageSpan>,
+}
+
+#[derive(Clone, Debug, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+struct CompilerMessageSpan {
+    column_start: usize,
+    column_end: usize,
+    file_name: String,
+    line_start: usize,
+    line_end: usize,
+}
+
+fn main() -> Result<()> {
+    let Args { path } = Args::parse();
+
+    let objs = if let Some(p) = path {
+        let f = std::fs::File::open(p)?;
+        json::Deserializer::from_reader(f)
+            .into_iter::<ClippyObj>()
+            .collect::<Result<Vec<_>, _>>()?
+    } else {
+        json::Deserializer::from_reader(std::io::stdin())
+            .into_iter::<ClippyObj>()
+            .collect::<Result<Vec<_>, _>>()?
+    };
+
+    for res in objs {
+        match res {
+            ClippyObj::CompilerArtifact(_) => {}
+            ClippyObj::BuildScriptExecuted(_) => {}
+            ClippyObj::CompilerMessage { message } => {
+                if message.code.is_some() {
+                    for span in message.spans.into_iter() {
+                        println!(
+                            "::{} file={},line={},endLine={},col={},endColumn={}::{}",
+                            message.level,
+                            span.file_name,
+                            span.line_start,
+                            span.line_end,
+                            span.column_start,
+                            span.column_end,
+                            urlencoding::encode(&*message.rendered),
+                        );
+                    }
+                }
+            }
+            ClippyObj::BuildFinished { success } => {
+                if !success {
+                    anyhow::bail!("command failed")
+                }
+            }
+        }
+    }
+
+    Ok(())
+}

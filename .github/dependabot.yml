@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      time: "03:00"
+      timezone: UTC
+
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+      time: "03:30"
+      timezone: UTC
+    allow:
+      - dependency-type: all
+    ignore:
+      - dependency-name: "clap_derive"
