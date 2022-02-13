@@ -9,7 +9,8 @@ use std::path::PathBuf;
 #[derive(Debug, Parser)]
 #[clap(version)]
 struct Args {
-    path: Option<PathBuf>,
+    #[clap(default_value = "-")]
+    path: PathBuf,
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
@@ -43,18 +44,7 @@ struct CompilerMessageSpan {
 fn main() -> Result<()> {
     let Args { path } = Args::parse();
 
-    let msgs = if let Some(p) = path {
-        let f = std::fs::File::open(p)?;
-        json::Deserializer::from_reader(f)
-            .into_iter::<CargoMessage>()
-            .collect::<Result<Vec<_>, _>>()?
-    } else {
-        json::Deserializer::from_reader(std::io::stdin())
-            .into_iter::<CargoMessage>()
-            .collect::<Result<Vec<_>, _>>()?
-    };
-
-    for msg in msgs {
+    for msg in read_messages(path)? {
         match msg {
             CargoMessage::CompilerArtifact(_) => {}
             CargoMessage::BuildScriptExecuted(_) => {}
@@ -77,13 +67,28 @@ fn main() -> Result<()> {
             }
             CargoMessage::BuildFinished { success } => {
                 if !success {
-                    anyhow::bail!("command failed")
+                    anyhow::bail!("build failed")
                 }
             }
         }
     }
 
     Ok(())
+}
+
+fn read_messages(path: PathBuf) -> Result<Vec<CargoMessage>> {
+    if path.to_str() == Some("-") {
+        let msgs = json::Deserializer::from_reader(std::io::stdin())
+            .into_iter::<CargoMessage>()
+            .collect::<Result<Vec<_>, _>>()?;
+        return Ok(msgs);
+    }
+
+    let f = std::fs::File::open(path)?;
+    let msgs = json::Deserializer::from_reader(f)
+        .into_iter::<CargoMessage>()
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(msgs)
 }
 
 fn encode_newlines(orig: String) -> String {
