@@ -1,0 +1,27 @@
+name: rustsec
+
+on:
+
+  # Run when the Cargo.lock changes or when this workflow changes.
+  push:
+    branches:
+      - main
+    paths:
+      - Cargo.lock
+      - deny.toml
+      - .github/workflows/rustsec.yml
+
+  # Run at 00:00 UTC every day
+  schedule:
+    - cron: '0 0 * * *'
+
+permissions:
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    name: audit
+    steps:
+      - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
+      - uses: olix0r/rustsecbot@560c817c7a019e1f0c2318721b55156409be7f8c
