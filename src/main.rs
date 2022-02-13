@@ -30,7 +30,6 @@ struct CompilerMessage {
     spans: Vec<CompilerMessageSpan>,
 }
 
-/// This docstring has an invalid [`link`] in it.
 #[derive(Clone, Debug, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 struct CompilerMessageSpan {
