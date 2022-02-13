@@ -7,6 +7,7 @@ use std::path::PathBuf;
 
 /// Converts cargo check (and clippy) JSON output to the GitHub Action error format
 #[derive(Debug, Parser)]
+#[clap(version)]
 struct Args {
     path: Option<PathBuf>,
 }
