@@ -35,4 +35,4 @@ It's primarily intended to be used in a GitHub Actions workflow:
       - run: cargo doc --no-deps --message-format=json | cargo-action-fmt
 ```
 
-![Example annotation][https://user-images.githubusercontent.com/240738/153767390-66f859d4-da3f-4e1e-846b-02605e8be628.png]
+![Example annotation](https://user-images.githubusercontent.com/240738/153767390-66f859d4-da3f-4e1e-846b-02605e8be628.png)
