@@ -59,6 +59,7 @@ fn main() -> Result<()> {
             ClippyObj::BuildScriptExecuted(_) => {}
             ClippyObj::CompilerMessage { message } => {
                 if message.code.is_some() {
+                    let msg = encode_newlines(message.rendered);
                     for span in message.spans.into_iter() {
                         println!(
                             "::{} file={},line={},endLine={},col={},endColumn={}::{}",
@@ -68,7 +69,7 @@ fn main() -> Result<()> {
                             span.line_end,
                             span.column_start,
                             span.column_end,
-                            urlencoding::encode(&*message.rendered),
+                            msg,
                         );
                     }
                 }
@@ -82,4 +83,8 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn encode_newlines(orig: String) -> String {
+    orig.replace('\n', "%0A")
 }
