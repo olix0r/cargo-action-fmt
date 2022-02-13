@@ -26,6 +26,8 @@ It's primarily intended to be used in a GitHub Actions workflow:
     runs-on: ubuntu-latest
     container:
       image: docker://rust:1.58.1-buster
+    env:
+      CARGO_ACTION_FMT_VERSION: v0.1.2
     steps:
       - uses: actions/checkout@v2
       - run: cargo fetch
