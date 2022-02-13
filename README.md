@@ -32,7 +32,7 @@ It's primarily intended to be used in a GitHub Actions workflow:
       - uses: actions/checkout@v2
       - run: cargo fetch
       - run: |
-          curl --proto https --tlsv1.3 -vsSfLo /usr/local/bin/cargo-action-fmt "https://github.com/olix0r/cargo-action-fmt/releases/download/release%2F${CARGO_ACTION_FMT_VERSION}/cargo-action-fmt-x86_64-unknown-linux-gnu"
+          curl --proto =https --tlsv1.3 -vsSfLo /usr/local/bin/cargo-action-fmt "https://github.com/olix0r/cargo-action-fmt/releases/download/release%2F${CARGO_ACTION_FMT_VERSION}/cargo-action-fmt-x86_64-unknown-linux-gnu"
           chmod 755 /usr/local/bin/cargo-action-fmt
       - run: cargo doc --no-deps --message-format=json | cargo-action-fmt
 ```
