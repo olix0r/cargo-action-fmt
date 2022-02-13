@@ -14,7 +14,7 @@ struct Args {
 
 #[derive(Clone, Debug, serde::Deserialize)]
 #[serde(tag = "reason", rename_all = "kebab-case")]
-enum ClippyObj {
+enum CargoMessage {
     CompilerArtifact(json::Value),
     BuildScriptExecuted(json::Value),
     CompilerMessage { message: CompilerMessage },
@@ -43,22 +43,22 @@ struct CompilerMessageSpan {
 fn main() -> Result<()> {
     let Args { path } = Args::parse();
 
-    let objs = if let Some(p) = path {
+    let msgs = if let Some(p) = path {
         let f = std::fs::File::open(p)?;
         json::Deserializer::from_reader(f)
-            .into_iter::<ClippyObj>()
+            .into_iter::<CargoMessage>()
             .collect::<Result<Vec<_>, _>>()?
     } else {
         json::Deserializer::from_reader(std::io::stdin())
-            .into_iter::<ClippyObj>()
+            .into_iter::<CargoMessage>()
             .collect::<Result<Vec<_>, _>>()?
     };
 
-    for res in objs {
-        match res {
-            ClippyObj::CompilerArtifact(_) => {}
-            ClippyObj::BuildScriptExecuted(_) => {}
-            ClippyObj::CompilerMessage { message } => {
+    for msg in msgs {
+        match msg {
+            CargoMessage::CompilerArtifact(_) => {}
+            CargoMessage::BuildScriptExecuted(_) => {}
+            CargoMessage::CompilerMessage { message } => {
                 if message.code.is_some() {
                     let msg = encode_newlines(message.rendered);
                     for span in message.spans.into_iter() {
@@ -75,7 +75,7 @@ fn main() -> Result<()> {
                     }
                 }
             }
-            ClippyObj::BuildFinished { success } => {
+            CargoMessage::BuildFinished { success } => {
                 if !success {
                     anyhow::bail!("command failed")
                 }
