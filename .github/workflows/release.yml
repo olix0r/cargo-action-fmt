@@ -1,0 +1,53 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'release/*'
+
+permissions:
+  contents: write
+
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  DEBIAN_FRONTEND: noninteractive
+  RUST_BACKTRACE: short
+  RUSTUP_MAX_RETRIES: 10
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container:
+      image: docker://rust:1.58.1-bullseye
+    steps:
+      - name: parse tag
+        id: parse-tag
+        run: |
+          ref="${{ github.ref }}"
+          echo "::set-output name=version::${ref#refs/tags/release/}"
+      - run: apt update && apt install -y jq
+      - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
+      - run: cargo fetch
+      - name: check crate and tag version
+        run: |
+          v=$(cargo metadata --frozen --format-version=1  | jq -r '.packages[] | select(.name == "cargo-action-fmt") | .version')
+          echo "cargo.toml v$v"
+          echo "tag ${{ steps.parse-tag.outputs.version }}"
+          if [ "v${v}" != "${{ steps.parse-tag.outputs.version }}" ]; then
+              echo "::error ::Crate version v${v} does not match tag version ${{ steps.parse-tag.outputs.version }}"
+              exit 1
+          fi
+
+      - name: cargo build
+        run: |
+          cargo build --release --frozen
+          mv target/release/cargo-action-fmt cargo-action-fmt-x86_64-unknown-linux-gnu
+
+      - uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5
+        with:
+          name: ${{ steps.parse-tag.outputs.version }}
+          files: cargo-action-fmt-x86_64-unknown-linux-gnu
+
+      - run: cargo publish --token=${{ secrets.CRATESIO_TOKEN }}
