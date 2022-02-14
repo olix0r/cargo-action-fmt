@@ -43,11 +43,11 @@ jobs:
       - name: cargo build
         run: |
           cargo build --release --frozen
-          mv target/release/cargo-action-fmt cargo-action-fmt-x86_64-unknown-linux-gnu
+          mv target/release/cargo-action-fmt target/cargo-action-fmt-x86_64-unknown-linux-gnu
 
       - uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5
         with:
           name: ${{ steps.parse-tag.outputs.version }}
-          files: cargo-action-fmt-x86_64-unknown-linux-gnu
+          files: target/cargo-action-fmt-x86_64-unknown-linux-gnu
 
       - run: cargo publish --token=${{ secrets.CRATESIO_TOKEN }}
