@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
-      image: docker://rust:1.58.1-buster
+      image: docker://rust:1.60-buster
     steps:
       - uses: actions/checkout@dcd71f646680f2efd8db4afa5ad64fdcba30e748
       - run: cargo fetch
@@ -35,7 +35,7 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
-      image: docker://rust:1.58.1-buster
+      image: docker://rust:1.60-buster
     steps:
       - uses: actions/checkout@dcd71f646680f2efd8db4afa5ad64fdcba30e748
       - run: rustup component add rustfmt
@@ -45,7 +45,7 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
-      image: docker://rust:1.58.1-buster
+      image: docker://rust:1.60-buster
     steps:
       - uses: actions/checkout@dcd71f646680f2efd8db4afa5ad64fdcba30e748
       - run: cargo fetch

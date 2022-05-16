@@ -1,8 +1,8 @@
 ARG CARGO_ACTION_FMT_VERSION=0.1.2
-ARG RUST_VERSION=1.58.1
+ARG RUST_VERSION=1.60
 
 FROM docker.io/rust:${RUST_VERSION}-bullseye as cargo-deny
-ARG CARGO_DENY_VERSION=0.11.1
+ARG CARGO_DENY_VERSION=0.11.4
 RUN curl --proto '=https' --tlsv1.3 -vsSfL "https://github.com/EmbarkStudios/cargo-deny/releases/download/${CARGO_DENY_VERSION}/cargo-deny-${CARGO_DENY_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
     | tar zvxf - --strip-components=1 -C /usr/local/bin "cargo-deny-${CARGO_DENY_VERSION}-x86_64-unknown-linux-musl/cargo-deny"
 

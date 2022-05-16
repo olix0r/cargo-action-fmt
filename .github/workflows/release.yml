@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     container:
-      image: docker://rust:1.58.1-bullseye
+      image: docker://rust:1.60-bullseye
     steps:
       - name: parse tag
         id: parse-tag
