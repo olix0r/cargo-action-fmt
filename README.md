@@ -27,7 +27,7 @@ It's primarily intended to be used in a GitHub Actions workflow:
     container:
       image: docker://rust:1.60-bullseye
     env:
-      CARGO_ACTION_FMT_VERSION: v0.1.2
+      CARGO_ACTION_FMT_VERSION: v0.1.3
     steps:
       - uses: actions/checkout@v2
       - run: cargo fetch
