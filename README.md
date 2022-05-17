@@ -26,14 +26,9 @@ It's primarily intended to be used in a GitHub Actions workflow:
     runs-on: ubuntu-latest
     container:
       image: docker://rust:1.60-bullseye
-    env:
-      CARGO_ACTION_FMT_VERSION: v0.1.3
     steps:
+      - uses: olix0r/cargo-action-fmt@v1.0.1
       - uses: actions/checkout@v2
-      - run: cargo fetch
-      - run: |
-          curl --proto =https --tlsv1.3 -vsSfLo /usr/local/bin/cargo-action-fmt "https://github.com/olix0r/cargo-action-fmt/releases/download/release%2F${CARGO_ACTION_FMT_VERSION}/cargo-action-fmt-x86_64-unknown-linux-gnu"
-          chmod 755 /usr/local/bin/cargo-action-fmt
       - run: cargo doc --no-deps --message-format=json | cargo-action-fmt
 ```
 
