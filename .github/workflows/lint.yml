@@ -10,7 +10,7 @@ on:
       - .github/workflows/lint.yml
 
 env:
-  CARGO_ACTION_FMT_VERSION: v0.1.2
+  CARGO_ACTION_FMT_VERSION: v0.1.3
   CARGO_INCREMENTAL: 0
   CARGO_NET_RETRY: 10
   RUST_BACKTRACE: short
@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
-      image: docker://rust:1.58.1-buster
+      image: docker://rust:1.60-buster
     steps:
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
       - run: cargo fetch
@@ -35,7 +35,7 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
-      image: docker://rust:1.58.1-buster
+      image: docker://rust:1.60-buster
     steps:
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
       - run: rustup component add rustfmt
@@ -45,7 +45,7 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
-      image: docker://rust:1.58.1-buster
+      image: docker://rust:1.60-buster
     steps:
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
       - run: cargo fetch

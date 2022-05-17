@@ -25,9 +25,9 @@ It's primarily intended to be used in a GitHub Actions workflow:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
-      image: docker://rust:1.58.1-buster
+      image: docker://rust:1.60-bullseye
     env:
-      CARGO_ACTION_FMT_VERSION: v0.1.2
+      CARGO_ACTION_FMT_VERSION: v0.1.3
     steps:
       - uses: actions/checkout@v2
       - run: cargo fetch
