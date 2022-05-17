@@ -28,42 +28,48 @@ jobs:
     steps:
       - name: parse tag
         id: parse-tag
+        shell: bash
         run: |
           ref="${{ github.ref }}"
-          if [[ "$ref" = refs/tags/release/* ]]; then
+          if [[ "$ref" == refs/tags/release/* ]]; then
             v="${ref#refs/tags/release/}"
+            echo "Release version: $v"
+            echo "::set-output name=version::$v"
           else
-            v=""
+            echo "Not a release version: $ref"
           fi
-          echo "::set-output name=version::$v"
-      - run: echo "version=${{ steps.parse-tag.outputs.version }}"
+
+      - name: Install jq
+        run: apt update && apt install -y jq
+      - name: Install yq
+        run: |
+          curl --proto '=https' --tlsv1.3 -fsSLo /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.25.1/yq_linux_amd64
+          chmod 755 /usr/local/bin/yq
 
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
-
-      - name: check crate version
-        if: steps.parse-tag.outputs.version
-        run: |
-          apt update && apt install -y jq
-          v=$(cargo metadata --frozen --format-version=1  | jq -r '.packages[] | select(.name == "cargo-action-fmt") | .version')
-          echo "cargo.toml v$v"
-          if [ "v${v}" != "${{ steps.parse-tag.outputs.version }}" ]; then
-              echo "::error ::Crate version v${v} does not match tag version ${{ steps.parse-tag.outputs.version }}"
-              exit 1
-          fi
 
       - name: check action version
         if: steps.parse-tag.outputs.version
         run: |
-          curl -Lo /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.25.1/yq_linux_amd64
-          chmod 755 /usr/local/bin/yq
           v=$(yq .inputs.version.default action.yml)
           echo "action.yml $v"
           if [ "v${v}" != "${{ steps.parse-tag.outputs.version }}" ]; then
-              echo "::error ::Action version ${v} does not match tag version ${{ steps.parse-tag.outputs.version }}"
-              exit 1
+            echo "::error ::Action version ${v} does not match tag version ${{ steps.parse-tag.outputs.version }}"
+            exit 1
           fi
 
-      - run: cargo fetch
+      - run: cargo fetch --locked
+
+      - name: check crate version
+        if: steps.parse-tag.outputs.version
+        run: |
+          v=$(cargo metadata --frozen --format-version=1  | jq -r '.packages[] | select(.name == "cargo-action-fmt") | .version')
+          echo "cargo.toml v$v"
+          if [ "v${v}" != "${{ steps.parse-tag.outputs.version }}" ]; then
+            echo "::error ::Crate version v${v} does not match tag version ${{ steps.parse-tag.outputs.version }}"
+            exit 1
+          fi
+
       - name: cargo build
         run: |
           cargo build --release --frozen

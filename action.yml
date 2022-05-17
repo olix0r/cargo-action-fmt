@@ -14,5 +14,5 @@ runs:
     - name: Install cargo-action-fmt
       shell: bash
       run: |
-        curl --proto '=https' --tlsv1.3 -sSfLo /usr/local/bin/cargo-action-fmt "https://github.com/${{ github.repository }}/releases/download/release%2F${{ inputs.version }}/cargo-action-fmt-x86_64-unknown-linux-gnu"
+        curl --proto '=https' --tlsv1.3 -fsSLo /usr/local/bin/cargo-action-fmt "https://github.com/${{ github.repository }}/releases/download/release%2F${{ inputs.version }}/cargo-action-fmt-x86_64-unknown-linux-gnu"
         chmod 755 /usr/local/bin/cargo-action-fmt
