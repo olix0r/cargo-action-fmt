@@ -53,7 +53,7 @@ jobs:
         run: |
           v=$(yq .inputs.version.default action.yml)
           echo "action.yml $v"
-          if [ "v${v}" != "${{ steps.parse-tag.outputs.version }}" ]; then
+          if [ "${v}" != "${{ steps.parse-tag.outputs.version }}" ]; then
             echo "::error ::Action version ${v} does not match tag version ${{ steps.parse-tag.outputs.version }}"
             exit 1
           fi
