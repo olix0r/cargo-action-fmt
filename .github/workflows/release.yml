@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - .github/workflows/release.yml
+      - action.yml
+      - Cargo.toml
   push:
     tags:
       - 'release/*'
