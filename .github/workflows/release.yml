@@ -36,29 +36,28 @@ jobs:
             v=""
           fi
           echo "::set-output name=version::$v"
+      - run: echo "version=${{ steps.parse-tag.outputs.version }}"
 
       - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
       - name: check crate version
-        if: steps.parse-tag.outputs.version != ''
+        if: steps.parse-tag.outputs.version
         run: |
           apt update && apt install -y jq
           v=$(cargo metadata --frozen --format-version=1  | jq -r '.packages[] | select(.name == "cargo-action-fmt") | .version')
           echo "cargo.toml v$v"
-          echo "tag ${{ steps.parse-tag.outputs.version }}"
           if [ "v${v}" != "${{ steps.parse-tag.outputs.version }}" ]; then
               echo "::error ::Crate version v${v} does not match tag version ${{ steps.parse-tag.outputs.version }}"
               exit 1
           fi
 
       - name: check action version
-        if: steps.parse-tag.outputs.version != ''
+        if: steps.parse-tag.outputs.version
         run: |
           curl -Lo /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.25.1/yq_linux_amd64
           chmod 755 /usr/local/bin/yq
           v=$(yq .inputs.version.default action.yml)
           echo "action.yml $v"
-          echo "tag ${{ steps.parse-tag.outputs.version }}"
           if [ "v${v}" != "${{ steps.parse-tag.outputs.version }}" ]; then
               echo "::error ::Action version ${v} does not match tag version ${{ steps.parse-tag.outputs.version }}"
               exit 1
@@ -73,10 +72,10 @@ jobs:
       - run: cargo publish --dry-run
 
       - uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5
-        if: steps.parse-tag.outputs.version != ''
+        if: steps.parse-tag.outputs.version
         with:
           name: ${{ steps.parse-tag.outputs.version }}
           files: target/cargo-action-fmt-x86_64-unknown-linux-gnu
 
-      - if: steps.parse-tag.outputs.version != ''
+      - if: steps.parse-tag.outputs.version
         run: cargo publish --token=${{ secrets.CRATESIO_TOKEN }}
