@@ -1,13 +1,12 @@
 {
 	"name": "cargo-action-fmt.dev",
-	"dockerFile": "./Dockerfile",
+	"image": "ghcr.io/linkerd/dev:v30",
 	"extensions": [
 		"DavidAnson.vscode-markdownlint",
-		"matklad.rust-analyzer",
 		"NathanRidley.autotrim",
+		"rust-lang.rust-analyzer",
 		"samverschueren.final-newline",
-		"streetsidesoftware.code-spell-checker",
-		"tamasfe.even-better-toml",
+		"tamasfe.even-better-toml"
 	],
 	"runArgs": [
 		"--init"
