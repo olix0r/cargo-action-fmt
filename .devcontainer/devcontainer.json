@@ -1,8 +1,9 @@
 {
 	"name": "cargo-action-fmt.dev",
-	"image": "ghcr.io/linkerd/dev:v30",
+	"image": "ghcr.io/linkerd/dev:v36",
 	"extensions": [
 		"DavidAnson.vscode-markdownlint",
+		"KokaKiwi.vscode-just",
 		"NathanRidley.autotrim",
 		"rust-lang.rust-analyzer",
 		"samverschueren.final-newline",
