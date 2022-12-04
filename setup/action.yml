@@ -6,7 +6,7 @@ inputs:
   version:
     description: The version of cargo-action-fmt to use
     required: false
-    default: v1.0.3
+    default: v1.0.4
 
 outputs:
   bin:
@@ -22,7 +22,7 @@ runs:
       run: |
         set -euo pipefail
         d=$(mktemp -d "${RUNNER_TEMP}/caf.XXXXX")
-        url="https://github.com/olix0r/cargo-action-fmt/releases/download/release%2F${{ inputs.version }}/cargo-action-fmt-$(uname -m)-unknown-linux-musl.tar.gz"
+        url="https://github.com/olix0r/cargo-action-fmt/releases/download/release%2F${{ inputs.version }}/cargo-action-fmt-${{ inputs.version }}-$(uname -m)-unknown-linux-musl.tar.gz"
         curl --proto '=https' --tlsv1.3 -fsSL "$url" | tar zvxf - -C "$d" cargo-action-fmt
         echo bin="$d/cargo-action-fmt" >> "$GITHUB_OUTPUT"
         echo PATH="$d:$PATH" >> "$GITHUB_ENV"
