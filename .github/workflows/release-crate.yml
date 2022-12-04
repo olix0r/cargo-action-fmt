@@ -61,7 +61,7 @@ jobs:
       - if: steps.parse-tag.outputs.version
         run: cargo publish --token=${{ secrets.CRATESIO_TOKEN }}
 
-      - uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5
+      - uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
         if: steps.parse-tag.outputs.version
         with:
           name: ${{ steps.parse-tag.outputs.version }}
