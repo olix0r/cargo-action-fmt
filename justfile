@@ -10,7 +10,7 @@ build *args:
 
 package dir: build
     @mkdir -p '{{ dir }}/{{ profile }}'
-    tar czf '{{ dir }}/{{ profile }}/cargo-action-fmt-{{ target }}.tar.gz' \
+    tar czf "{{ dir }}/{{ profile }}/cargo-action-fmt-$(just crate-version)-{{ target }}.tar.gz" \
         -C 'target/{{ target }}/{{ profile }}' \
         cargo-action-fmt
 

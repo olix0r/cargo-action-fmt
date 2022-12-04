@@ -1,6 +1,6 @@
 [package]
 name = "cargo-action-fmt"
-version = "1.0.3"
+version = "1.0.4"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/olix0r/cargo-action-fmt"
