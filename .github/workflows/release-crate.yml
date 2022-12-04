@@ -1,23 +1,17 @@
-name: release
+name: Crate Release
 
 on:
   pull_request:
     paths:
-      - .github/workflows/release.yml
-      - action.yml
+      - .github/workflows/release-crate.yml
       - Cargo.toml
+      - justfile
   push:
     tags:
-      - 'release/*'
+      - 'release/v[0-9]+.[0-9]+.[0-9]+'
 
 permissions:
   contents: write
-
-env:
-  CARGO_INCREMENTAL: 0
-  CARGO_NET_RETRY: 10
-  RUST_BACKTRACE: short
-  RUSTUP_MAX_RETRIES: 10
 
 jobs:
   publish:
@@ -32,7 +26,7 @@ jobs:
           ref="${{ github.ref }}"
           if [[ "$ref" == refs/tags/release/* ]]; then
             v="${ref#refs/tags/release/}"
-            echo "Release version: $v"
+            echo "Crate version: $v"
             echo version="$v" >> "$GITHUB_OUTPUT"
           else
             echo "Not a release version: $ref"
@@ -42,37 +36,25 @@ jobs:
       - run: apt update && apt install -y --no-install-recommends jq
 
       - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
-      - name: Check action version
-        if: steps.parse-tag.outputs.version
-        run: |
-          v=$(yq .inputs.version.default action.yml)
-          echo "action.yml $v"
-          if [ "${v}" != '${{ steps.parse-tag.outputs.version }}' ]; then
-            echo "::error ::Action version ${v} does not match tag version ${{ steps.parse-tag.outputs.version }}"
-            exit 1
-          fi
+      - run: just fetch --locked
 
-      - run: just-cargo fetch --locked
       - name: Check crate version
         if: steps.parse-tag.outputs.version
         run: |
-          v=$(just-cargo crate-version 'cargo-action-fmt')
+          v=$(just crate-version)
           echo "cargo.toml $v"
           if [ "${v}" != '${{ steps.parse-tag.outputs.version }}' ]; then
-            echo "::error ::Crate version v${v} does not match tag version ${{ steps.parse-tag.outputs.version }}"
+            echo "::error ::Crate version '${v} does' not match tag version '${{ steps.parse-tag.outputs.version }}'"
             exit 1
           fi
 
-      - run: just-cargo profile=release target=x86_64-unknown-linux-musl build --frozen
-      - run: just-cargo profile=release target=aarch64-unknown-linux-musl build --frozen
-      - run: just-cargo profile=release target=armv7-unknown-linux-musleabihf build --frozen
-      - name: Package
-        shell: bash
-        run: |
-          mkdir -p target/out
-          for t in {x86_64,aarch64}-unknown-linux-musl armv7-unknown-linux-musleabihf ; do
-            tar czf "target/out/cargo-action-fmt-${t}.tar.gz" -C "target/$t/release" cargo-action-fmt
-          done
+      # These are fairly quick so we don't bother running them in parallel. The
+      # `cargo fetch` time above far outweighs the build time.
+      - run: echo PKG_DIR="$(mktemp -d "$RUNNER_TEMP/pkg.XXX")" >> "$GITHUB_ENV"
+      - run: just profile=release target=x86_64-unknown-linux-musl package "$PKG_DIR"
+      - run: just profile=release target=aarch64-unknown-linux-musl package "$PKG_DIR"
+      - run: just profile=release target=armv7-unknown-linux-musleabihf package "$PKG_DIR"
+      - run: find "$PKG_DIR"/release -ls
 
       - if: steps.parse-tag.outputs.version == ''
         run: cargo publish --dry-run
@@ -83,5 +65,5 @@ jobs:
         if: steps.parse-tag.outputs.version
         with:
           name: ${{ steps.parse-tag.outputs.version }}
-          files: target/out/*
+          files: ${{ env.PKG_DIR }}/release/*
           generate_release_notes: true

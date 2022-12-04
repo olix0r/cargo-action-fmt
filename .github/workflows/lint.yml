@@ -9,12 +9,6 @@ on:
       - "**/*.rs"
       - .github/workflows/lint.yml
 
-env:
-  CARGO_INCREMENTAL: 0
-  CARGO_NET_RETRY: 10
-  RUST_BACKTRACE: short
-  RUSTUP_MAX_RETRIES: 10
-
 jobs:
   clippy:
     timeout-minutes: 10
@@ -22,10 +16,8 @@ jobs:
     container: docker://ghcr.io/linkerd/dev:v36-rust
     steps:
       - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
-      - uses: ./
-      - run: cargo fetch
-      - run: rustup component add clippy
-      - run: cargo clippy --message-format=json | cargo-action-fmt
+      - run: just-cargo fetch --locked
+      - run: just-cargo clippy
 
   fmt:
     timeout-minutes: 10
@@ -33,8 +25,7 @@ jobs:
     container: docker://ghcr.io/linkerd/dev:v36-rust
     steps:
       - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
-      - run: rustup component add rustfmt
-      - run: cargo fmt --check
+      - run: just-cargo fmt --check
 
   docs:
     timeout-minutes: 10
@@ -42,6 +33,5 @@ jobs:
     container: docker://ghcr.io/linkerd/dev:v36-rust
     steps:
       - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
-      - uses: ./
-      - run: cargo fetch
-      - run: cargo doc --no-deps --message-format=json | cargo-action-fmt
+      - run: just-cargo fetch
+      - run: just-cargo doc --no-deps
