@@ -23,9 +23,9 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    container: docker://ghcr.io/linkerd/dev:v30-rust
+    container: docker://ghcr.io/linkerd/dev:v36-rust-musl
     steps:
-      - name: parse tag
+      - name: Parse tag
         id: parse-tag
         shell: bash
         run: |
@@ -33,48 +33,55 @@ jobs:
           if [[ "$ref" == refs/tags/release/* ]]; then
             v="${ref#refs/tags/release/}"
             echo "Release version: $v"
-            echo "::set-output name=version::$v"
+            echo version="$v" >> "$GITHUB_OUTPUT"
           else
             echo "Not a release version: $ref"
           fi
 
-      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+      # XXX dev:v36-rust container doesn't include libjq
+      - run: apt update && apt install -y --no-install-recommends jq
 
-      - name: check action version
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+      - name: Check action version
         if: steps.parse-tag.outputs.version
         run: |
           v=$(yq .inputs.version.default action.yml)
           echo "action.yml $v"
-          if [ "${v}" != "${{ steps.parse-tag.outputs.version }}" ]; then
+          if [ "${v}" != '${{ steps.parse-tag.outputs.version }}' ]; then
             echo "::error ::Action version ${v} does not match tag version ${{ steps.parse-tag.outputs.version }}"
             exit 1
           fi
 
-      - run: cargo fetch --locked
-
-      - name: check crate version
+      - run: just-cargo fetch --locked
+      - name: Check crate version
         if: steps.parse-tag.outputs.version
         run: |
-          v=$(cargo metadata --frozen --format-version=1  | jq -r '.packages[] | select(.name == "cargo-action-fmt") | .version')
-          echo "cargo.toml v$v"
-          if [ "v${v}" != "${{ steps.parse-tag.outputs.version }}" ]; then
+          v=$(just-cargo crate-version 'cargo-action-fmt')
+          echo "cargo.toml $v"
+          if [ "${v}" != '${{ steps.parse-tag.outputs.version }}' ]; then
             echo "::error ::Crate version v${v} does not match tag version ${{ steps.parse-tag.outputs.version }}"
             exit 1
           fi
 
-      - name: cargo build
+      - run: just-cargo profile=release target=x86_64-unknown-linux-musl build --frozen
+      - run: just-cargo profile=release target=aarch64-unknown-linux-musl build --frozen
+      - run: just-cargo profile=release target=armv7-unknown-linux-musleabihf build --frozen
+      - name: Package
+        shell: bash
         run: |
-          cargo build --release --frozen
-          mv target/release/cargo-action-fmt target/cargo-action-fmt-x86_64-unknown-linux-gnu
+          mkdir -p target/out
+          for t in {x86_64,aarch64}-unknown-linux-musl armv7-unknown-linux-musleabihf ; do
+            tar czf "target/out/cargo-action-fmt-${t}.tar.gz" -C "target/$t/release" cargo-action-fmt
+          done
 
-      - run: cargo publish --dry-run
+      - if: steps.parse-tag.outputs.version == ''
+        run: cargo publish --dry-run
+      - if: steps.parse-tag.outputs.version
+        run: cargo publish --token=${{ secrets.CRATESIO_TOKEN }}
 
       - uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5
         if: steps.parse-tag.outputs.version
         with:
           name: ${{ steps.parse-tag.outputs.version }}
-          files: target/cargo-action-fmt-x86_64-unknown-linux-gnu
+          files: target/out/*
           generate_release_notes: true
-
-      - if: steps.parse-tag.outputs.version
-        run: cargo publish --token=${{ secrets.CRATESIO_TOKEN }}
