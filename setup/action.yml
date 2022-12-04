@@ -1,0 +1,28 @@
+name: Setup cargo-action-fmt
+description: Formats cargo's JSON output as GitHub Action annotations
+author: olix0r
+
+inputs:
+  version:
+    description: The version of cargo-action-fmt to use
+    required: false
+    default: v1.0.3
+
+outputs:
+  bin:
+    description: The path to the cargo-action-fmt binary
+    value: ${{ steps.install.outputs.bin }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install cargo-action-fmt
+      id: install
+      shell: bash
+      run: |
+        set -euo pipefail
+        d=$(mktemp -d "${RUNNER_TEMP}/caf.XXXXX")
+        url="https://github.com/olix0r/cargo-action-fmt/releases/download/release%2F${{ inputs.version }}/cargo-action-fmt-$(uname -m)-unknown-linux-musl.tar.gz"
+        curl --proto '=https' --tlsv1.3 -fsSL "$url" | tar zvxf - -C "$d" cargo-action-fmt
+        echo bin="$d/cargo-action-fmt" >> "$GITHUB_OUTPUT"
+        echo PATH="$d:$PATH" >> "$GITHUB_ENV"

@@ -1,0 +1,68 @@
+name: Action Release
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/release-actionml
+      - setup/action.yml
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container: docker://ghcr.io/linkerd/dev:v36-rust
+    steps:
+      - name: Parse tag
+        id: parse-tag
+        shell: bash
+        run: |
+          ref="${{ github.ref }}"
+          if [[ "$ref" == refs/tags/v* ]]; then
+            v="${ref#refs/tags/}"
+            echo "Action version: $v"
+            echo version="$v" >> "$GITHUB_OUTPUT"
+          else
+            echo "Not a release version: $ref"
+          fi
+
+      # XXX dev:v36-rust container doesn't include libjq
+      - run: apt update && apt install -y --no-install-recommends jq
+
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+      - run: just fetch --locked
+
+      - name: Check that the action references the current crate version
+        run: |
+          action=$(yq .inputs.version.default setup/action.yml)
+          echo "setup/action.yml $action"
+          crate=$(just crate-version)
+          echo "Cargo.toml $crate"
+          if [ "${crate}" != "${action}" ]; then
+            echo "::error ::Action version ${action} does not match the current crate version ${crate}"
+            exit 1
+          fi
+
+      # Exercise the action to ensure it works as expected
+      - uses: ./setup
+        id: setup
+      - name: Check that setup-provided binary is first in the PATH
+        run: |
+          bin=$(command -v cargo-action-fmt)
+          if [ "$bin" != '${{ steps.setup.outputs.bin }}' ]; then
+            echo "::error ::cargo-action-fmt is not installed in the expected location"
+            exit 1
+          fi
+      - name: Check that it's usable
+        run: cargo check -q --message-format=json | cargo-action-fmt
+
+      - uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5
+        if: steps.parse-tag.outputs.version
+        with:
+          name: setup@${{ steps.parse-tag.outputs.version }}
+          generate_release_notes: true
