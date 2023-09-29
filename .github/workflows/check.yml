@@ -24,6 +24,9 @@ jobs:
     outputs:
       toolchain: ${{ steps.determine-toolchain.outputs.toolchain }}
     steps:
+      - name: Setup | Checkout code
+        uses: actions/checkout@v4
+
       - id: determine-toolchain
         run: |
           TOOLCHAIN=$(grep '^channel' rust-toolchain.toml | cut -d '"' -f 2)
