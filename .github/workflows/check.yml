@@ -27,18 +27,19 @@ jobs:
       - name: Setup | Checkout code
         uses: actions/checkout@v4
 
-      - id: determine-toolchain
+      - name: Run | Determine Toolchain
+        id: determine-toolchain
         run: |
           TOOLCHAIN=$(grep '^channel' rust-toolchain.toml | cut -d '"' -f 2)
           echo "toolchain=${TOOLCHAIN}" >>"${GITHUB_OUTPUT}"
 
-  general_check:
+  general-checks:
     name: General Check
     runs-on: ubuntu-22.04
     needs: determine-toolchain
     steps:
       - name: Setup | Install GitHub CI Annotations Formatter
-        uses: olix0r/cargo-action-fmt@main
+        uses: olix0r/cargo-action-fmt/setup@v2
 
       - name: Setup | Checkout code
         uses: actions/checkout@v4
@@ -48,53 +49,22 @@ jobs:
         with:
           toolchain: ${{needs.determine-toolchain.outputs.toolchain}}
 
-      - name: Run `cargo check`
+      - name: Run | `cargo check`
         run: cargo check --quiet --message-format=json | cargo-action-fmt
 
-  formatting:
-    name: Formatting Check
-    runs-on: ubuntu-22.04
-    needs: determine-toolchain
-    steps:
-      - name: Setup | Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup | Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{needs.determine-toolchain.outputs.toolchain}}
-          components: rustfmt
-
-      - name: Run `cargo fmt`
-        run: cargo fmt --all --message-format=human -- --check
-
-  clippy:
-    name: Clippy Check
-    runs-on: ubuntu-22.04
-    needs: determine-toolchain
-    steps:
-      - name: Setup | Install GitHub CI Annotations Formatter
-        uses: olix0r/cargo-action-fmt@main
-
-      - name: Setup | Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup | Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{needs.determine-toolchain.outputs.toolchain}}
-          components: clippy
-
-      - name: Run `cargo clippy`
+      - name: Run | `cargo clippy`
         run: cargo clippy --quiet --message-format=json | cargo-action-fmt
 
-  documentation:
+      - name: Run | `cargo fmt`
+        run: cargo fmt --all --message-format=human -- --check
+
+  documentation-check:
     name: Documentation Check
     runs-on: ubuntu-22.04
     needs: determine-toolchain
     steps:
       - name: Setup | Install GitHub CI Annotations Formatter
-        uses: olix0r/cargo-action-fmt@main
+        uses: olix0r/cargo-action-fmt/setup@v2
 
       - name: Setup | Checkout code
         uses: actions/checkout@v4
@@ -104,5 +74,5 @@ jobs:
         with:
           toolchain: ${{needs.determine-toolchain.outputs.toolchain}}
 
-      - name: Run `cargo doc`
+      - name: Run | `cargo doc`
         run: cargo doc --no-deps --message-format=json | cargo-action-fmt
