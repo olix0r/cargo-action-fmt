@@ -1,0 +1,42 @@
+# -----------------------------------------------
+# ----  EditorConfig  ---------------------------
+# ----  https://editorconfig.org  ---------------
+# -----------------------------------------------
+
+# -----------------------------------------------
+# ----  General  --------------------------------
+# -----------------------------------------------
+
+root = true
+
+[*]
+end_of_line          = lf
+insert_final_newline = true
+charset              = utf-8
+indent_style         = space
+indent_size          = 2
+tab_width            = 2
+max_line_length      = 110
+insert_final_newline = true
+
+# -----------------------------------------------
+# ----  Rust  -----------------------------------
+# -----------------------------------------------
+
+[*.{rs}]
+indent_style         = tab
+
+[Justfile]
+indent_style         = tab
+
+# -----------------------------------------------
+# ----  Shell (Bash)  ---------------------------
+# -----------------------------------------------
+
+[*.sh]
+shell_variant        = bash
+binary_next_line     = true
+switch_case_indent   = true
+space_redirects      = false
+keep_padding         = false
+function_next_line   = true

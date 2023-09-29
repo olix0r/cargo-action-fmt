@@ -1,96 +1,60 @@
-#![deny(warnings, rust_2018_idioms)]
+// SPDX-License-Identifier: MIT
 
-use anyhow::Result;
-use clap::Parser;
-use serde_json as json;
-use std::path::PathBuf;
+// Preventing `unsafe` code in `main.rs` completely.
+#![deny(unsafe_code)]
+// Clippy lint target one. Enables all lints that are on by
+// default (correctness, suspicious, style, complexity, perf).
+#![deny(clippy::all)]
+// Clippy lint target two. Enables lints which are rather strict
+// or have occasional false positives.
+#![deny(clippy::nursery)]
+// Clippy lint target three. Enables new lints that are still
+// under development
+#![deny(clippy::pedantic)]
+// Clippy lint target four. Enable lints for the cargo manifest
+// file, a.k.a. Cargo.toml.
+#![deny(clippy::cargo)]
+#![allow(clippy::multiple_crate_versions)]
+// Clippy lint(s) target(s) five. Custom linting rules.
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
+// Lint target for code documentation. This lint enforces code
+// documentation on every code item.
+#![deny(missing_docs)]
+#![deny(missing_debug_implementations)]
+#![deny(clippy::missing_docs_in_private_items)]
+// Lint target for code documentation. When running `rustdoc`,
+// show an error when using broken links.
+#![deny(rustdoc::all)]
+// All other, generic lint targets that were not
+// covered previously
+#![deny(missing_debug_implementations)]
 
-/// Converts cargo check (and clippy) JSON output to the GitHub Action error format
-#[derive(Debug, Parser)]
-#[clap(version)]
-struct Args {
-    #[clap(default_value = "-")]
-    path: PathBuf,
+//! cargo-action-fmt
+//!
+//! Convert the output of cargo check (and more) to the
+//! GitHub Actions comment format.
+
+/// Actually responsible for the conversion of Cargo's outputs to GitHub's
+/// format.
+mod messages;
+
+/// Holds the arguments that this binary can accept.
+#[derive(clap::Parser, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[command(author, version, about, long_about = None)]
+pub struct Arguments {
+	/// When provided, read the messages from the file described by this path.
+	#[arg(short, long)]
+	pub path: Option<std::path::PathBuf>,
 }
 
-#[derive(Clone, Debug, serde::Deserialize)]
-#[serde(tag = "reason", rename_all = "kebab-case")]
-enum CargoMessage {
-    CompilerArtifact(json::Value),
-    BuildScriptExecuted(json::Value),
-    CompilerMessage { message: CompilerMessage },
-    BuildFinished { success: bool },
-}
+fn main() -> anyhow::Result<()> {
+	let arguments = <Arguments as clap::Parser>::parse();
 
-#[derive(Clone, Debug, serde::Deserialize)]
-#[serde(rename_all = "snake_case")]
-struct CompilerMessage {
-    rendered: String,
-    code: Option<json::Value>,
-    level: String,
-    spans: Vec<CompilerMessageSpan>,
-}
+	for msg in messages::CargoMessage::read(arguments.path.as_ref())? {
+		msg.evaluate()?;
+	}
 
-#[derive(Clone, Debug, serde::Deserialize)]
-#[serde(rename_all = "snake_case")]
-struct CompilerMessageSpan {
-    column_start: usize,
-    column_end: usize,
-    file_name: String,
-    line_start: usize,
-    line_end: usize,
-}
-
-fn main() -> Result<()> {
-    let Args { path } = Args::parse();
-
-    for msg in read_messages(path)? {
-        match msg {
-            CargoMessage::CompilerArtifact(_) => {}
-            CargoMessage::BuildScriptExecuted(_) => {}
-            CargoMessage::CompilerMessage { message } => {
-                if message.code.is_some() {
-                    let msg = encode_newlines(message.rendered);
-                    for span in message.spans.into_iter() {
-                        println!(
-                            "::{} file={},line={},endLine={},col={},endColumn={}::{}",
-                            message.level,
-                            span.file_name,
-                            span.line_start,
-                            span.line_end,
-                            span.column_start,
-                            span.column_end,
-                            msg,
-                        );
-                    }
-                }
-            }
-            CargoMessage::BuildFinished { success } => {
-                if !success {
-                    anyhow::bail!("build failed")
-                }
-            }
-        }
-    }
-
-    Ok(())
-}
-
-fn read_messages(path: PathBuf) -> Result<Vec<CargoMessage>> {
-    if path.to_str() == Some("-") {
-        let msgs = json::Deserializer::from_reader(std::io::stdin())
-            .into_iter::<CargoMessage>()
-            .collect::<Result<Vec<_>, _>>()?;
-        return Ok(msgs);
-    }
-
-    let f = std::fs::File::open(path)?;
-    let msgs = json::Deserializer::from_reader(f)
-        .into_iter::<CargoMessage>()
-        .collect::<Result<Vec<_>, _>>()?;
-    Ok(msgs)
-}
-
-fn encode_newlines(orig: String) -> String {
-    orig.replace('\n', "%0A")
+	Ok(())
 }

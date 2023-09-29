@@ -1,0 +1,104 @@
+---
+name: Code Quality Analysis
+
+on: # yamllint disable-line rule:truthy
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/check.yml
+      - src/**
+    branches: ['**']
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  determine-toolchain:
+    runs-on: ubuntu-22.04
+    outputs:
+      toolchain: ${{ steps.determine-toolchain.outputs.toolchain }}
+    steps:
+      - id: determine-toolchain
+        run: |
+          TOOLCHAIN=$(grep '^channel' rust-toolchain.toml | cut -d '"' -f 2)
+          echo "toolchain=${TOOLCHAIN}" >>"${GITHUB_OUTPUT}"
+
+  general_check:
+    name: General Check
+    runs-on: ubuntu-22.04
+    needs: determine-toolchain
+    steps:
+      - name: Setup | Install GitHub CI Annotations Formatter
+        uses: olix0r/cargo-action-fmt@main
+
+      - name: Setup | Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup | Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ jobs.determine-toolchain.outputs.toolchain }}
+
+      - name: Run `cargo check`
+        run: cargo check --quiet --message-format=json | cargo-action-fmt
+
+  formatting:
+    name: Formatting Check
+    runs-on: ubuntu-22.04
+    needs: determine-toolchain
+    steps:
+      - name: Setup | Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup | Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ jobs.determine-toolchain.outputs.toolchain }}
+          components: rustfmt
+
+      - name: Run `cargo fmt`
+        run: cargo fmt --all --message-format=human -- --check
+
+  clippy:
+    name: Clippy Check
+    runs-on: ubuntu-22.04
+    needs: determine-toolchain
+    steps:
+      - name: Setup | Install GitHub CI Annotations Formatter
+        uses: olix0r/cargo-action-fmt@main
+
+      - name: Setup | Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup | Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ jobs.determine-toolchain.outputs.toolchain }}
+
+      - name: Run `cargo clippy`
+        run: cargo clippy --quiet --message-format=json | cargo-action-fmt
+
+  documentation:
+    name: Documentation Check
+    runs-on: ubuntu-22.04
+    needs: determine-toolchain
+    steps:
+      - name: Setup | Install GitHub CI Annotations Formatter
+        uses: olix0r/cargo-action-fmt@main
+
+      - name: Setup | Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup | Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ jobs.determine-toolchain.outputs.toolchain }}
+
+      - name: Run `cargo doc`
+        run: cargo doc --no-deps --message-format=json | cargo-action-fmt

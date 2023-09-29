@@ -1,12 +1,12 @@
 name: Setup cargo-action-fmt
-description: Formats cargo's JSON output as GitHub Action annotations
-author: olix0r
+description: Convert the output of cargo check (and more) to the GitHub Actions comment format
+author: \@georglauterbach and \@olix0r
 
 inputs:
   version:
     description: The version of cargo-action-fmt to use
     required: false
-    default: v1.0.4
+    default: v0.1.0
 
 outputs:
   bin:
@@ -20,9 +20,13 @@ runs:
       id: install
       shell: bash
       run: |
-        set -euo pipefail
-        d=$(mktemp -d "${RUNNER_TEMP}/caf.XXXXX")
-        url="https://github.com/olix0r/cargo-action-fmt/releases/download/release%2F${{ inputs.version }}/cargo-action-fmt-${{ inputs.version }}-$(uname -m)-unknown-linux-musl.tar.gz"
-        curl --proto '=https' --tlsv1.3 -fsSL "$url" | tar zvxf - -C "$d" cargo-action-fmt
-        echo bin="$d/cargo-action-fmt" >> "$GITHUB_OUTPUT"
-        echo PATH="$d:$PATH" >> "$GITHUB_ENV"
+        set -eE -u -o pipefail
+        shopt -s inherit_errexit
+
+        DIR=$(mktemp -d "${RUNNER_TEMP}/caf.XXXXX")
+        URL="https://github.com/georglauterbach/cargo-action-fmt/releases/download/release%2F${{ inputs.version }}/cargo-action-fmt-${{ inputs.version }}-$(uname -m)-unknown-linux-musl.tar.gz"
+
+        curl --proto '=https' --tlsv1.3 -sSfL "${URL}" | tar zvxf - -C "${DIR}" cargo-action-fmt
+
+        echo bin="${DIR}/cargo-action-fmt" >>"${GITHUB_OUTPUT}"
+        echo PATH="${DIR}:${PATH}" >> "${GITHUB_ENV}"

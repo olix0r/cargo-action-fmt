@@ -1,10 +1,9 @@
 {
 	"name": "cargo-action-fmt.dev",
-	"image": "ghcr.io/linkerd/dev:v36",
+	"image": "mcr.microsoft.com/devcontainers/rust:bookworm",
 	"extensions": [
 		"DavidAnson.vscode-markdownlint",
 		"KokaKiwi.vscode-just",
-		"NathanRidley.autotrim",
 		"rust-lang.rust-analyzer",
 		"samverschueren.final-newline",
 		"tamasfe.even-better-toml"

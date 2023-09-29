@@ -13,7 +13,3 @@ updates:
       interval: weekly
       time: "03:30"
       timezone: UTC
-    allow:
-      - dependency-type: all
-    ignore:
-      - dependency-name: "clap_derive"

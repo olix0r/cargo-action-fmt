@@ -1,19 +1,81 @@
+# -----------------------------------------------
+# ----  Package  --------------------------------
+# -----------------------------------------------
+
 [package]
-name = "cargo-action-fmt"
-version = "1.0.4"
-edition = "2021"
-license = "MIT"
-repository = "https://github.com/olix0r/cargo-action-fmt"
-description = """
-Converts cargo check (and clippy) JSON output to the GitHub Action error format
-"""
+name = 'cargo-action-fmt'
+version = '0.1.0'
+edition = '2021'
+
+authors = [
+  'Oliver Gould (@olix0r)',
+  'Georg Lauterbach (@georglauterbach)'
+]
+
+description = 'Convert the output of cargo check (and more) to the GitHub Actions comment format'
+documentation = 'README.md'
+license = 'MIT'
+readme = './README.md'
+
+homepage = 'https://github.com/georglauterbach/cargo-action-fmt'
+repository = 'https://github.com/georglauterbach/cargo-action-fmt'
+
+keywords = [
+  'ci',
+  'github',
+  'github actions'
+]
+
+categories = [
+  'development-tools::testing',
+  'parsing'
+]
+
+publish = true
+
+autobenches = true
+autobins = true
+autoexamples = true
+autotests = true
+
+# -----------------------------------------------
+# ----  Dependencies  ---------------------------
+# -----------------------------------------------
 
 [dependencies]
-anyhow = "1"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+anyhow = '1.0.75'
+serde = { version = '1.0.188', features = ['derive'] }
+serde_json = '1.0.107'
+clap = { version = '4.4.6', default-features = true, features = ['derive'] }
 
-[dependencies.clap]
-version = "4"
-default-features = false
-features = ["derive", "std"]
+# -----------------------------------------------
+# ----  Profiles  -------------------------------
+# -----------------------------------------------
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = true
+
+incremental = false
+
+debug = false
+debug-assertions = false
+overflow-checks = false
+strip = "none"
+
+[profile.dev]
+opt-level = 0
+lto = false
+
+incremental = true
+
+debug = true
+debug-assertions = true
+overflow-checks = true
+strip = false
+
+
+[profile.release.build-override]
+inherits = "release"
+

@@ -1,0 +1,19 @@
+# For a reference to this file, see
+# https://rust-lang.github.io/rustup/overrides.html#the-toolchain-file
+
+# Rust toolchain releases can be found under
+# https://rust-lang.github.io/rustup-components-history/
+
+[toolchain]
+channel = "nightly-2023-09-29"
+components = [
+  'cargo',
+  'clippy',
+  'rustc',
+  'rustfmt',
+  'rust-std'
+]
+targets = [
+  "x86_64-unknown-linux-musl",
+  "aarch64-unknown-linux-musl"
+]
