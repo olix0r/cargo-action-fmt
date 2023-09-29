@@ -43,7 +43,7 @@ jobs:
       - name: Setup | Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: ${{ jobs.determine-toolchain.outputs.toolchain }}
+          toolchain: ${{needs.determine-toolchain.outputs.toolchain}}
 
       - name: Run `cargo check`
         run: cargo check --quiet --message-format=json | cargo-action-fmt
@@ -59,7 +59,7 @@ jobs:
       - name: Setup | Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: ${{ jobs.determine-toolchain.outputs.toolchain }}
+          toolchain: ${{needs.determine-toolchain.outputs.toolchain}}
           components: rustfmt
 
       - name: Run `cargo fmt`
@@ -79,7 +79,8 @@ jobs:
       - name: Setup | Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: ${{ jobs.determine-toolchain.outputs.toolchain }}
+          toolchain: ${{needs.determine-toolchain.outputs.toolchain}}
+          components: clippy
 
       - name: Run `cargo clippy`
         run: cargo clippy --quiet --message-format=json | cargo-action-fmt
@@ -98,7 +99,7 @@ jobs:
       - name: Setup | Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: ${{ jobs.determine-toolchain.outputs.toolchain }}
+          toolchain: ${{needs.determine-toolchain.outputs.toolchain}}
 
       - name: Run `cargo doc`
         run: cargo doc --no-deps --message-format=json | cargo-action-fmt
