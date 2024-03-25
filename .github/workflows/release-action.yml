@@ -61,7 +61,7 @@ jobs:
       - name: Check that it's usable
         run: cargo check -q --message-format=json | cargo-action-fmt
 
-      - uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
+      - uses: softprops/action-gh-release@9d7c94cfd0a1f3ed45544c887983e9fa900f0564
         if: steps.parse-tag.outputs.version
         with:
           name: setup@${{ steps.parse-tag.outputs.version }}
